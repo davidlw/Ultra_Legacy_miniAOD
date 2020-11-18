@@ -322,8 +322,8 @@ void MyClass::Loop(int job){
 	cout << "skipper is: " << skipper <<endl;
 	cout << "tripper is: " << tripper <<endl;
 
-	//int backMult =1;
-	int backMult =8;
+	int backMult =1;
+	//int backMult =8;
 	for(int wtrk = 1; wtrk < trackbin+1; wtrk++){
 		for(int wppt = 1; wppt < ptbin+1; wppt++){
 

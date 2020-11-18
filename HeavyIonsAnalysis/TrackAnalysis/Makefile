@@ -7,11 +7,15 @@ endif
 
 MKDIR_BIN=mkdir -p $(PWD)/bin
 
-all: mkdirBin bin/MyClass.exe 
+all: mkdirBin bin/MyClass.exe bin/genOnlyAnalyzer.exe bin/HBT.exe
 
 mkdirBin:
 	$(MKDIR_BIN)
 
+bin/genOnlyAnalyzer.exe: src/genOnlyAnalyzer.C
+	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/genOnlyAnalyzer.exe src/genOnlyAnalyzer.C
+bin/HBT.exe: src/HBT.C
+	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/HBT.exe src/HBT.C
 bin/MyClass.exe: src/MyClass.C
 	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/MyClass.exe src/MyClass.C
 

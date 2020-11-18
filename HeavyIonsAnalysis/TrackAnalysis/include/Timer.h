@@ -1,6 +1,7 @@
 #ifndef TIMER
 #define TIMER
 
+#include <cstring>
 #include <iomanip>
 #include <chrono>
 #include <vector>
