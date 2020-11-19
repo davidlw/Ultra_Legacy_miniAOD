@@ -44,6 +44,9 @@ void analyze( std::vector< std::string> files){
   std::vector< std::vector< float > > * genDau_eta = 0;
   std::vector< std::vector< float > > * genDau_phi = 0;
 
+  // Histograms for HBT analysis
+  TH1D* hQSignal = new TH1D("hQSignal",";q_{inv}",1000,0,10);
+  TH1D* hQBkg = new TH1D("hQBkg",";q_{inv}",1000,0,10);
 
   std::cout << "calculating weighting factors for qhat bins" << std::endl;
   for(unsigned int f = 0; f<files.size(); f++){
@@ -87,6 +90,14 @@ void analyze( std::vector< std::string> files){
     t->SetBranchAddress("genDau_phi",&genDau_phi); 
 
     //event loop
+
+    std::vector< std::vector< float > > ptStar_pos_vectvect;
+    std::vector< std::vector< float > > etaStar_pos_vectvect;
+    std::vector< std::vector< float > > phiStar_pos_vectvect;
+    std::vector< std::vector< float > > ptStar_neg_vectvect;
+    std::vector< std::vector< float > > etaStar_neg_vectvect;
+    std::vector< std::vector< float > > phiStar_neg_vectvect;
+    
     for(int i = 0; i<t->GetEntries(); i++){
       t->GetEntry(i);
       //weight by xsection/total number of gen events in the pthat bin
@@ -98,6 +109,13 @@ void analyze( std::vector< std::string> files){
         if(genJetPt->at(j) > 500){
 
           //constituent loop
+
+          std::vector< float > ptStar_pos_vect;
+          std::vector< float > etaStar_pos_vect;
+          std::vector< float > phiStar_pos_vect;
+          std::vector< float > ptStar_neg_vect;
+          std::vector< float > etaStar_neg_vect;
+          std::vector< float > phiStar_neg_vect;
           for(int k = 0; k<(genDau_chg->at(j)).size(); k++){
             //skip neutral particles and calculate variables with respect to jet axis:
             if( (genDau_chg->at(j)).at(k) == 0 ) continue;
@@ -105,17 +123,101 @@ void analyze( std::vector< std::string> files){
             float etaStar = etaWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
             float phiStar = phiWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
 
+            if(ptStar<0 || ptStar>3) continue;
+ 
+            if( (genDau_chg->at(j)).at(k)>0 )
+            {
+              ptStar_pos_vect.push_back(ptStar);
+              etaStar_pos_vect.push_back(etaStar);
+              phiStar_pos_vect.push_back(phiStar);
+            }
+            if( (genDau_chg->at(j)).at(k)<0 )
+            {
+              ptStar_neg_vect.push_back(ptStar);
+              etaStar_neg_vect.push_back(etaStar);
+              phiStar_neg_vect.push_back(phiStar);
+            }
             //
             //insert constituent-level analysis code here
             //
-        
 
           } //end of constituent loop
+         
+          // fill signal pairs
+          for(int ii = 0; ii<(int)ptStar_pos_vect.size(); ii++)
+            for(int jj = ii+1; jj<(int)ptStar_pos_vect.size(); jj++)
+            {
+              TVector3 vect1, vect2;
+              vect1.SetPtEtaPhi(ptStar_pos_vect.at(ii),etaStar_pos_vect.at(ii),phiStar_pos_vect.at(ii));
+              vect2.SetPtEtaPhi(ptStar_pos_vect.at(jj),etaStar_pos_vect.at(jj),phiStar_pos_vect.at(jj));
+ 
+              hQSignal->Fill((vect1-vect2).Mag());
+            }
+
+          for(int ii = 0; ii<(int)ptStar_neg_vect.size(); ii++)
+            for(int jj = ii+1; jj<(int)ptStar_neg_vect.size(); jj++)
+            {
+              TVector3 vect1, vect2;
+              vect1.SetPtEtaPhi(ptStar_neg_vect.at(ii),etaStar_neg_vect.at(ii),phiStar_neg_vect.at(ii));
+              vect2.SetPtEtaPhi(ptStar_neg_vect.at(jj),etaStar_neg_vect.at(jj),phiStar_neg_vect.at(jj));
+
+              hQSignal->Fill((vect1-vect2).Mag());
+            }
+
+          // fill bkg pairs
+          for(int mm = 0; mm<(int)ptStar_pos_vectvect.size(); mm++)
+            for(int ii = 0; ii<(int)ptStar_pos_vect.size(); ii++)
+              for(int jj = 0; jj<(int)(ptStar_pos_vectvect.at(mm)).size(); jj++)
+              {
+                TVector3 vect1, vect2;
+                vect1.SetPtEtaPhi(ptStar_pos_vect.at(ii),etaStar_pos_vect.at(ii),phiStar_pos_vect.at(ii));
+                vect2.SetPtEtaPhi((ptStar_pos_vectvect.at(mm)).at(jj),(etaStar_pos_vectvect.at(mm)).at(jj),(phiStar_pos_vectvect.at(mm)).at(jj));
+
+                hQBkg->Fill((vect1-vect2).Mag());
+              }          
+
+          for(int mm = 0; mm<(int)ptStar_neg_vectvect.size(); mm++)
+            for(int ii = 0; ii<(int)ptStar_neg_vect.size(); ii++)
+              for(int jj = 0; jj<(int)(ptStar_neg_vectvect.at(mm)).size(); jj++)
+              {
+                TVector3 vect1, vect2;
+                vect1.SetPtEtaPhi(ptStar_neg_vect.at(ii),etaStar_neg_vect.at(ii),phiStar_neg_vect.at(ii));
+                vect2.SetPtEtaPhi((ptStar_neg_vectvect.at(mm)).at(jj),(etaStar_neg_vectvect.at(mm)).at(jj),(phiStar_neg_vectvect.at(mm)).at(jj));
+
+                hQBkg->Fill((vect1-vect2).Mag());
+              }
+
+          // fill mixed event vectors
+          if((int)ptStar_pos_vectvect.size()==10)
+          {
+            ptStar_pos_vectvect.erase(ptStar_pos_vectvect.begin());
+            etaStar_pos_vectvect.erase(etaStar_pos_vectvect.begin());
+            phiStar_pos_vectvect.erase(phiStar_pos_vectvect.begin());
+          }
+          ptStar_pos_vectvect.push_back(ptStar_pos_vect);
+          etaStar_pos_vectvect.push_back(etaStar_pos_vect);
+          phiStar_pos_vectvect.push_back(phiStar_pos_vect);
+
+          if((int)ptStar_neg_vectvect.size()==10)
+          {
+            ptStar_neg_vectvect.erase(ptStar_neg_vectvect.begin());
+            etaStar_neg_vectvect.erase(etaStar_neg_vectvect.begin());
+            phiStar_neg_vectvect.erase(phiStar_neg_vectvect.begin());
+          }
+          ptStar_neg_vectvect.push_back(ptStar_neg_vect);
+          etaStar_neg_vectvect.push_back(etaStar_neg_vect);
+          phiStar_neg_vectvect.push_back(phiStar_neg_vect);
+
         }
       }  //end of jet loop
     }  //end of event loop
     inputFile->Close();
-  } //end of file loop 
+  } //end of file loop
+ 
+  TFile * outputFile = TFile::Open("output_HBT.root","recreate");
+  hQSignal->Write();
+  hQBkg->Write();
+  outputFile->Close();
 }
 
 //Code enters execution here
