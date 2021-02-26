@@ -3,7 +3,6 @@
 #include <TStyle.h>
 #include "TH1D.h"
 #include "TH2D.h"
-#include "TH3D.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TPad.h"
@@ -34,9 +33,8 @@
 #include "include/MultiCumulants/MultiCumulants/QTerms.h"
 #include "include/MultiCumulants/MultiCumulants/Correlator.h"
 
-#define PI 3.1416
 
-void analyze( std::vector< std::string> files, std::string outputFileName = "output_cumulants.root"){
+void analyze( std::vector< std::string> files, std::string outputFileName = "output_cumulants_v2.root"){
 
   //stuff for qhat combination
   const int nqHats = 8;
@@ -57,75 +55,18 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
   std::vector< std::vector< float > > * genDau_eta = 0;
   std::vector< std::vector< float > > * genDau_phi = 0;
 
-  // Histograms  
-  TH2D*  hJetPtMult = new TH2D("hJetPtMult",";p_{T};nMult",160,400,2000,300,0,300);
-  TH2D*  hJetPMult = new TH2D("hJetPMult",";p;nMult",180,400,4000,300,0,300);
-  TH2D*  hJetEtaPt = new TH2D("hJetEtaPt",";#eta;p_{T}",200,0,20,160,400,2000);
 
-  const int nbins = 6;
-  double binarray[nbins+1] = {0.,   10.,  20.,  30.,  40.,  60.,  200.};
-  TH2D*  hPhi = new TH2D("hPhi",";#phi;nMult",32,-PI,PI, nbins, binarray);
-  TH2D*  hEtaPhi = new TH2D("hEtaPhi",";#phi;#eta",32,-PI,PI,36,0.8,11.6);
-  TH2D*  hEtaPt = new TH2D("hEtaPt",";#eta;p_{T}",240,0.,12,100,0,10);
-
-  const  int nbinsPhi = 32;
-  const  int nbinsEta = 24;
-  double binarrayPhi[nbinsPhi+1];
-  double binarrayEta[nbinsEta+1];
-  double binwidthPhi = 2*PI/nbinsPhi;
-  double binwidthEta = 0.3; 
-  for(int i=0;i<=nbinsPhi;i++) binarrayPhi[i] = -PI + i*binwidthPhi;
-  for(int i=0;i<=nbinsEta;i++) binarrayEta[i] = 0.8 + i*binwidthEta;
-  TH3D*  hEtaMultPhi = new TH3D("hEtaMultPhi",";#phi;#eta", nbinsPhi, binarrayPhi, nbinsEta, binarrayEta, nbins, binarray);  
-
-  TH1D*  hcN1 = new TH1D("hcN1",";N_{trk}",1000,0,1000);
+  // Histograms
   TH1D*  hcN2 = new TH1D("hcN2",";N_{trk}",1000,0,1000);
   TH1D*  hcN4 = new TH1D("hcN4",";N_{trk}",1000,0,1000);
   TH1D*  hcN6 = new TH1D("hcN6",";N_{trk}",1000,0,1000);
   TH1D*  hcN8 = new TH1D("hcN8",";N_{trk}",1000,0,1000);
 
   //Init cumulants
-//  4-subevents, R-0.8
-//  vector<double>  etasubmin_{2.,0.8,2.,0.8, 3. ,4.5,3. ,4.5};  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{3.,2. ,3.,2. , 4.5,7. ,4.5,7. };  //max eta of the tracks for subevents
-
-//  3-subevents, R-0.8
-//  vector<double>  etasubmin_{2.5,2.5,0.8,0.8,0.8,4. ,4. ,4. };  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{4., 4. ,2.5,2.5,2.5,7. ,7. ,7. };  //max eta of the tracks for subevents
-
-//  2-subevents, R-0.8
-//  vector<double>  etasubmin_{0.8,0.8,0.8,0.8,3. ,3. ,3. ,3. };  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{3. ,3. ,3. ,3. ,7. ,7. ,7. ,7. };  //max eta of the tracks for subevents
-
-//  standard, R-0.8
-//  vector<double>  etasubmin_{0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8};  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{7. ,7. ,7. ,7. ,7. ,7. ,7. ,7. };  //max eta of the tracks for subevents
-
-//  4-subevents, R-0.8
-  vector<double>  etasubmin_{1.3,0.86,1.3,0.86,1.7,2.4,1.7,2.4};  //min eta of the tracks for subevents
-  vector<double>  etasubmax_{1.7,1.3 ,1.7,1.3 ,2.4,4. ,2.4,4. };  //max eta of the tracks for subevents
-
-//  3-subevents, R-0.4
-//  vector<double>  etasubmin_{1.5,1.5,0.86,0.86,0.86,2. ,2. ,2.};  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{2. ,2. ,1.5 ,1.5 ,1.5 ,4. ,4. ,4. };  //max eta of the tracks for subevents
-
-//  vector<double>  etasubmin_{0.8,0.8,2. ,2. ,2. ,4. ,4. ,4. };  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{2. ,2. ,4. ,4. ,4. ,7. ,7. ,7. };  //max eta of the tracks for subevents
-
-//  2-subevents, R-0.8
-//  vector<double>  etasubmin_{0.86,0.86,0.86,0.86,1.7,1.7,1.7,1.7};  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{1.7 ,1.7 ,1.7 ,1.7 ,4. ,4. ,4. ,4. };  //max eta of the tracks for subevents
-
-//  standard, R-0.8
-//  vector<double>  etasubmin_{0.86,0.86,0.86,0.86,0.86,0.86,0.86,0.86};  //min eta of the tracks for subevents
-//  vector<double>  etasubmax_{4.  ,4.  ,4.  ,4.  ,4.  ,4.  ,4.  ,4. };  //max eta of the tracks for subevents
-
-//  vector<double>  ptsubmin_{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5};  //min pt of the tracks for subevents
+  vector<double>  etasubmin_{-20.,-20.,-20.,-20.,-20.,-20.,-20.,-20.};  //min eta of the tracks for subevents
+  vector<double>  etasubmax_{20.,20.,20.,20.,20.,20.,20.,20.};  //max eta of the tracks for subevents
   vector<double>  ptsubmin_{0.,0.,0.,0.,0.,0.,0.,0.};  //min pt of the tracks for subevents
-//  vector<double>  ptsubmax_{3.,3.,3.,3.,3.,3.,3.,3.};  //max pt of the tracks for subevents  
-  vector<double>  ptsubmax_{1.,1.,1.,1.,1.,1.,1.,1.};  //max pt of the tracks for subevents  
-//  vector<double>  ptsubmax_{0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5};  //max pt of the tracks for subevents  
-//  vector<double>  ptsubmax_{2.,2.,2.,2.,2.,2.,2.,2.};  //max pt of the tracks for subevents  
+  vector<double>  ptsubmax_{3.,3.,3.,3.,3.,3.,3.,3.};  //max pt of the tracks for subevents  
 
   cumulant::Subset sub_1(2);
   sub_1.set(0, "pt", ptsubmin_[0], ptsubmax_[0]);
@@ -178,16 +119,8 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
   bool cweight_ = true;
   cumulant::QVectorSet qN_ = cumulant::QVectorSet(h, set, cweight_);
 
-  double sumCN1_1_[1000]={0};
-  double sumwCN1_1_[1000]={0};
   double sumCN2_17_[1000]={0};
   double sumwCN2_17_[1000]={0};
-  double sumCN2_18_[1000]={0};
-  double sumwCN2_18_[1000]={0};
-  double sumCN2_33_[1000]={0};
-  double sumwCN2_33_[1000]={0};
-  double sumCN2_34_[1000]={0};
-  double sumwCN2_34_[1000]={0};
   double sumCN4_51_[1000]={0};
   double sumwCN4_51_[1000]={0};
   double sumCN6_119_[1000]={0};
@@ -196,14 +129,12 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
   double sumwCN8_[1000]={0};
 
   // load phi efficiency correction map
-  TH3D* heff_ = 0;
+  TH2D* heff_;
   if(cweight_)
   {
-//    TFile* feff_ = new TFile("EfficiencyMap_pythia8_470all_ak8_pt03.root");
-//    TFile* feff_ = new TFile("EfficiencyMap_pythia8_470all_ak8_pt053.root");
-    TFile* feff_ = new TFile("EfficiencyMap_pythia8_470all_ak8_pt01.root");
-    heff_ = (TH3D*)feff_->Get("hEtaMultPhi");
-//    heff_->Scale(2*3.1416/heff_->Integral("width"));
+    TFile* feff_ = new TFile("output_phi.root");
+    heff_ = (TH2D*)feff_->Get("hPhi");
+    heff_->Scale(2*3.1416/heff_->Integral("width"));
   }
 
   std::cout << "calculating weighting factors for qhat bins" << std::endl;
@@ -256,16 +187,13 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
       //jets loop
       for(int j = 0; j<genJetPt->size(); j++){
         //only take jets >500 GeV
-        if(genJetPt->at(j) > 500 && fabs(genJetEta->at(j)) < 1.6){
-
-          hJetPtMult->Fill(genJetPt->at(j),genJetChargedMultiplicity->at(j));
-          hJetPMult->Fill(genJetPt->at(j)*cosh(genJetEta->at(j)),genJetChargedMultiplicity->at(j));
-          hJetEtaPt->Fill(genJetEta->at(j),genJetPt->at(j));
+        if(genJetPt->at(j) > 500){
 
           //constituent loop
           qN_.reset();
           std::vector<double> val(2,0.);
           int mult_ = 0;
+
 
           for(int k = 0; k<(genDau_chg->at(j)).size(); k++){
             //skip neutral particles and calculate variables with respect to jet axis:
@@ -273,15 +201,8 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
             double ptStar = ptWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
             double etaStar = etaWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
             double phiStar = phiWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
-            double weight = 1.;
-            if(heff_) weight = weight / heff_->GetBinContent(heff_->FindBin(phiStar,etaStar,genJetChargedMultiplicity->at(j)));
-//            if(heff_) weight = weight / heff_->GetBinContent(heff_->FindBin(phiStar,genJetChargedMultiplicity->at(j)));
-//            if(heff2_) weight = weight / heff2_->GetBinContent(heff2_->FindBin(phiStar,etaStar));
-
-//            std::cout<<weight<<std::endl;
-
-            hEtaPhi->Fill(phiStar,etaStar,weight);
-            hEtaPt->Fill(etaStar,ptStar,weight);
+            double weight = 1;
+            if(heff_) weight = 1./heff_->GetBinContent(heff_->FindBin(phiStar,genJetChargedMultiplicity->at(j)));
 
             //
             //insert constituent-level analysis code here
@@ -289,37 +210,15 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
             val[0] = ptStar;
             val[1] = etaStar;
             qN_.fill(val, phiStar, weight);
-
-            mult_++;
-
-            if(ptStar<ptsubmax_[0] && ptStar>ptsubmin_[0] && etaStar<4 && etaStar>0.86)
-            { 
-              hPhi->Fill(phiStar,genJetChargedMultiplicity->at(j),weight); 
-              hEtaMultPhi->Fill(phiStar,etaStar,genJetChargedMultiplicity->at(j),weight);
-            }
+            if(ptStar<3 && ptStar>0 && fabs(etaStar)<20) mult_++;
           } //end of constituent loop
 
-//          continue;
- 
           // Calculate cumulants
-
           cumulant::QVectorMap& qNmap = qN_.getQ();
 
-          cumulant::Correlator c1_1 = cumulant::Correlator(1, qNmap);
-          double CN1_1_  = c1_1.v.real();
-          double wCN1_1_ = c1_1.w;
           cumulant::Correlator c2_17 = cumulant::Correlator(17, qNmap);
           double CN2_17_  = c2_17.v.real(); 
           double wCN2_17_ = c2_17.w;
-          cumulant::Correlator c2_18 = cumulant::Correlator(18, qNmap);
-          double CN2_18_  = c2_18.v.real();
-          double wCN2_18_ = c2_18.w;
-          cumulant::Correlator c2_33 = cumulant::Correlator(33, qNmap);
-          double CN2_33_  = c2_33.v.real();
-          double wCN2_33_ = c2_33.w;
-          cumulant::Correlator c2_34 = cumulant::Correlator(34, qNmap);
-          double CN2_34_  = c2_34.v.real();
-          double wCN2_34_ = c2_34.w;
           cumulant::Correlator c4_51 = cumulant::Correlator(51, qNmap);
           double CN4_51_  = c4_51.v.real();
           double wCN4_51_ = c4_51.w;
@@ -330,23 +229,23 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
           double CN8_  = c8.v.real();
           double wCN8_ = c8.w;
 
-//std::cout<<wCN1_1_<<" "<<wCN2_17_<<" "<<wCN4_51_<<" "<<wCN6_119_<<" "<<wCN8_<<std::endl;
-//std::cout<<CN2_17_<<" "<<CN4_51_<<std::endl;
-          sumCN1_1_[mult_] += CN1_1_;
-          sumwCN1_1_[mult_] += wCN1_1_;
-          sumCN2_17_[mult_] += CN2_17_;
+          if(wCN2_17_)  CN2_17_  = CN2_17_  / wCN2_17_;
+          if(wCN4_51_)  CN4_51_  = CN4_51_  / wCN4_51_;
+          if(wCN6_119_) CN6_119_ = CN6_119_ / wCN6_119_;
+          if(wCN8_)     CN8_     = CN8_     / wCN8_;
+
+          double cum2 = CN2_17_;
+          double cum4 = CN4_51_ - 2*CN2_17_*CN2_17_;
+          double cum6 = CN6_119_ - 9*CN4_51_*CN2_17_ + 12*CN2_17_*CN2_17_*CN2_17_;
+          double cum8 = CN8_ - 16*CN6_119_*CN2_17_ - 18*CN4_51_*CN4_51_ + 144*CN4_51_*CN2_17_*CN2_17_ - 144*CN2_17_*CN2_17_*CN2_17_*CN2_17_;
+
+          sumCN2_17_[mult_] += cum2*wCN2_17_;
           sumwCN2_17_[mult_] += wCN2_17_;
-          sumCN2_18_[mult_] += CN2_18_;
-          sumwCN2_18_[mult_] += wCN2_18_;
-          sumCN2_33_[mult_] += CN2_33_;
-          sumwCN2_33_[mult_] += wCN2_33_;
-          sumCN2_34_[mult_] += CN2_34_;
-          sumwCN2_34_[mult_] += wCN2_34_;
-          sumCN4_51_[mult_] += CN4_51_;
+          sumCN4_51_[mult_] += cum4*wCN4_51_;
           sumwCN4_51_[mult_] += wCN4_51_;
-          sumCN6_119_[mult_] += CN6_119_;
+          sumCN6_119_[mult_] += cum6*wCN6_119_;
           sumwCN6_119_[mult_] += wCN6_119_;
-          sumCN8_[mult_] += CN8_;
+          sumCN8_[mult_] += cum8*wCN8_;
           sumwCN8_[mult_] += wCN8_;
         }
       }  //end of jet loop
@@ -356,84 +255,22 @@ void analyze( std::vector< std::string> files, std::string outputFileName = "out
 
   for(int i=0;i<hcN2->GetNbinsX();i++)
   {
-    if(sumwCN1_1_[i])  sumCN1_1_[i]  = sumCN1_1_[i]  / sumwCN1_1_[i];
     if(sumwCN2_17_[i])  sumCN2_17_[i]  = sumCN2_17_[i]  / sumwCN2_17_[i];
-    if(sumwCN2_18_[i])  sumCN2_18_[i]  = sumCN2_18_[i]  / sumwCN2_18_[i];
-    if(sumwCN2_33_[i])  sumCN2_33_[i]  = sumCN2_33_[i]  / sumwCN2_33_[i];
-    if(sumwCN2_34_[i])  sumCN2_34_[i]  = sumCN2_34_[i]  / sumwCN2_34_[i];
     if(sumwCN4_51_[i])  sumCN4_51_[i]  = sumCN4_51_[i]  / sumwCN4_51_[i];
     if(sumwCN6_119_[i]) sumCN6_119_[i] = sumCN6_119_[i] / sumwCN6_119_[i];
     if(sumwCN8_[i])     sumCN8_[i]     = sumCN8_[i]     / sumwCN8_[i];
 
-    double cum1 = sumCN1_1_[i];
-    double cum2 = sumCN2_17_[i];
-    double cum4 = sumCN4_51_[i] - sumCN2_17_[i]*sumCN2_34_[i] - sumCN2_18_[i]*sumCN2_33_[i];
-    double cum6 = sumCN6_119_[i] - 9*sumCN4_51_[i]*sumCN2_17_[i] + 12*sumCN2_17_[i]*sumCN2_17_[i]*sumCN2_17_[i];
-    double cum8 = sumCN8_[i] - 16*sumCN6_119_[i]*sumCN2_17_[i] - 18*sumCN4_51_[i]*sumCN4_51_[i] + 144*sumCN4_51_[i]*sumCN2_17_[i]*sumCN2_17_[i] - 144*sumCN2_17_[i]*sumCN2_17_[i]*sumCN2_17_[i]*sumCN2_17_[i];
-
-    hcN1->SetBinContent(i+1,cum1);
-    if(i>2) hcN2->SetBinContent(i+1,cum2);
-    if(i>4) hcN4->SetBinContent(i+1,cum4);
-    if(i>6) hcN6->SetBinContent(i+1,cum6);
-    if(i>8) hcN8->SetBinContent(i+1,cum8);
-  }
-
-  for(int j=1;j<=hPhi->GetNbinsY();j++)
-  {
-    double integral = hPhi->Integral(1,100000,j,j);
-    if(!integral) continue;
-
-    for(int i=1;i<=hPhi->GetNbinsX();i++)
-    {
-      hPhi->SetBinContent(i,j,hPhi->GetBinContent(i,j)*2*3.1416/integral/hPhi->GetXaxis()->GetBinWidth(1));
-    }
-  }
-
-
-  for(int j=1;j<=hEtaPhi->GetNbinsY();j++)
-  {
-    double integral = hEtaPhi->Integral(1,100000,j,j);
-    if(!integral) continue;
-
-    for(int i=1;i<=hEtaPhi->GetNbinsX();i++)
-    {
-      hEtaPhi->SetBinContent(i,j,hEtaPhi->GetBinContent(i,j)*2*3.1416/integral/hEtaPhi->GetXaxis()->GetBinWidth(1));
-    }
-  }
-
-  for(int k=1;k<=hEtaMultPhi->GetNbinsZ();k++)
-  {
-    hEtaMultPhi->GetZaxis()->SetRange(k,k);
-    TH2D* hTmp = (TH2D*)hEtaMultPhi->Project3D("yx");
-
-    for(int j=1;j<=hTmp->GetNbinsY();j++)
-    {
-      double integral = hTmp->Integral(1,100000,j,j);
-      if(!integral) continue;
-
-      for(int i=1;i<=hTmp->GetNbinsX();i++)
-      {
-        hEtaMultPhi->SetBinContent(i,j,k,hTmp->GetBinContent(i,j)*2*3.1416/integral/hTmp->GetXaxis()->GetBinWidth(1));
-      }
-    }
+    if(i>2) hcN2->SetBinContent(i+1,sumCN2_17_[i]);
+    if(i>4) hcN4->SetBinContent(i+1,sumCN4_51_[i]);
+    if(i>6) hcN6->SetBinContent(i+1,sumCN6_119_[i]);
+    if(i>8) hcN8->SetBinContent(i+1,sumCN8_[i]);
   }
 
   TFile * outputFile = TFile::Open(outputFileName.data(),"recreate");
-  hPhi->Write();
-  hEtaPhi->Write();
-  hEtaPt->Write();
-  hEtaMultPhi->Write();
- 
-  hJetPtMult->Write();
-  hJetPMult->Write();
-  hJetEtaPt->Write();
-
-  hcN1->Write();
   hcN2->Write();
   hcN4->Write();
   hcN6->Write();
   hcN8->Write();
-
   outputFile->Close();
 }
 
@@ -444,7 +281,8 @@ int main(int argc, const char* argv[])
   {
     std::cout << "Usage: Z_mumu_Channel <fileList> <outputfile>" << std::endl;
     return 1;
-  }
+  }  
+
 
   //read input parameters
   std::string fList = argv[1];

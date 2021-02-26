@@ -23,7 +23,7 @@
 #include <fstream>
 #include "include/coordinateTools.h"
 
-void analyze( std::vector< std::string> files){
+void analyze( std::vector< std::string> files, std::string outputFileName = "output_cumulants.root"){
 
   //stuff for qhat combination
   const int nqHats = 8;
@@ -47,6 +47,8 @@ void analyze( std::vector< std::string> files){
   // Histograms for HBT analysis
   TH1D* hQSignal = new TH1D("hQSignal",";q_{inv}",1000,0,10);
   TH1D* hQBkg = new TH1D("hQBkg",";q_{inv}",1000,0,10);
+  TH2D* hQSignalvsKt = new TH2D("hQSignalvsKt",";q_{inv} (GeV);k_{T} (GeV)",1000,0,10,10,0,1);
+  TH2D* hQBkgvsKt = new TH2D("hQBkgvsKt",";q_{inv} (GeV);k_{T} (GeV)",1000,0,10,10,0,1);
 
   std::cout << "calculating weighting factors for qhat bins" << std::endl;
   for(unsigned int f = 0; f<files.size(); f++){
@@ -106,7 +108,7 @@ void analyze( std::vector< std::string> files){
       //jets loop
       for(int j = 0; j<genJetPt->size(); j++){
         //only take jets >500 GeV
-        if(genJetPt->at(j) > 500){
+        if(genJetPt->at(j) > 500 && fabs(genJetEta->at(j)) < 1.6){
 
           //constituent loop
 
@@ -116,14 +118,21 @@ void analyze( std::vector< std::string> files){
           std::vector< float > ptStar_neg_vect;
           std::vector< float > etaStar_neg_vect;
           std::vector< float > phiStar_neg_vect;
+
+          int nmult = genJetChargedMultiplicity->at(j);
+//          if(nmult<0 || nmult>=20) continue;
+
           for(int k = 0; k<(genDau_chg->at(j)).size(); k++){
             //skip neutral particles and calculate variables with respect to jet axis:
             if( (genDau_chg->at(j)).at(k) == 0 ) continue;
+            if( fabs((genDau_pid->at(j)).at(k)) != 211 ) continue;
+
             float ptStar = ptWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
             float etaStar = etaWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
             float phiStar = phiWRTJet(genJetPt->at(j), genJetEta->at(j), genJetPhi->at(j), (genDau_pt->at(j)).at(k), (genDau_eta->at(j)).at(k), (genDau_phi->at(j)).at(k));
 
             if(ptStar<0 || ptStar>3) continue;
+            if(etaStar<0.86 || etaStar>4) continue;
  
             if( (genDau_chg->at(j)).at(k)>0 )
             {
@@ -151,7 +160,9 @@ void analyze( std::vector< std::string> files){
               vect1.SetPtEtaPhi(ptStar_pos_vect.at(ii),etaStar_pos_vect.at(ii),phiStar_pos_vect.at(ii));
               vect2.SetPtEtaPhi(ptStar_pos_vect.at(jj),etaStar_pos_vect.at(jj),phiStar_pos_vect.at(jj));
  
-              hQSignal->Fill((vect1-vect2).Mag());
+              hQSignalvsKt->Fill((vect1-vect2).Mag(),((vect1+vect2).Pt())/2);
+
+              if(((vect1+vect2).Pt())/2<0.3) hQSignal->Fill((vect1-vect2).Mag());
             }
 
           for(int ii = 0; ii<(int)ptStar_neg_vect.size(); ii++)
@@ -161,7 +172,9 @@ void analyze( std::vector< std::string> files){
               vect1.SetPtEtaPhi(ptStar_neg_vect.at(ii),etaStar_neg_vect.at(ii),phiStar_neg_vect.at(ii));
               vect2.SetPtEtaPhi(ptStar_neg_vect.at(jj),etaStar_neg_vect.at(jj),phiStar_neg_vect.at(jj));
 
-              hQSignal->Fill((vect1-vect2).Mag());
+              hQSignalvsKt->Fill((vect1-vect2).Mag(),((vect1+vect2).Pt())/2);
+
+              if(((vect1+vect2).Pt())/2<0.3) hQSignal->Fill((vect1-vect2).Mag());
             }
 
           // fill bkg pairs
@@ -173,7 +186,9 @@ void analyze( std::vector< std::string> files){
                 vect1.SetPtEtaPhi(ptStar_pos_vect.at(ii),etaStar_pos_vect.at(ii),phiStar_pos_vect.at(ii));
                 vect2.SetPtEtaPhi((ptStar_pos_vectvect.at(mm)).at(jj),(etaStar_pos_vectvect.at(mm)).at(jj),(phiStar_pos_vectvect.at(mm)).at(jj));
 
-                hQBkg->Fill((vect1-vect2).Mag());
+                hQBkgvsKt->Fill((vect1-vect2).Mag(),((vect1+vect2).Pt())/2);
+
+                if(((vect1+vect2).Pt())/2<0.3) hQBkg->Fill((vect1-vect2).Mag());
               }          
 
           for(int mm = 0; mm<(int)ptStar_neg_vectvect.size(); mm++)
@@ -184,7 +199,9 @@ void analyze( std::vector< std::string> files){
                 vect1.SetPtEtaPhi(ptStar_neg_vect.at(ii),etaStar_neg_vect.at(ii),phiStar_neg_vect.at(ii));
                 vect2.SetPtEtaPhi((ptStar_neg_vectvect.at(mm)).at(jj),(etaStar_neg_vectvect.at(mm)).at(jj),(phiStar_neg_vectvect.at(mm)).at(jj));
 
-                hQBkg->Fill((vect1-vect2).Mag());
+                hQBkgvsKt->Fill((vect1-vect2).Mag(),((vect1+vect2).Pt())/2);
+
+                if(((vect1+vect2).Pt())/2<0.3) hQBkg->Fill((vect1-vect2).Mag());
               }
 
           // fill mixed event vectors
@@ -214,28 +231,29 @@ void analyze( std::vector< std::string> files){
     inputFile->Close();
   } //end of file loop
  
-  TFile * outputFile = TFile::Open("output_HBT.root","recreate");
+  TFile * outputFile = TFile::Open(outputFileName.data(),"recreate");
   hQSignal->Write();
   hQBkg->Write();
+  hQSignalvsKt->Write();
+  hQBkgvsKt->Write();
   outputFile->Close();
 }
 
 //Code enters execution here
 int main(int argc, const char* argv[])
 {
-  if(argc != 2)
+  if(argc != 3)
   {
-    std::cout << "Usage: Z_mumu_Channel <fileList>" << std::endl;
+    std::cout << "Usage: Z_mumu_Channel <fileList> <outputfile>" << std::endl;
     return 1;
-  }  
-
+  }
 
   //read input parameters
   std::string fList = argv[1];
   std::string buffer;
   std::vector<std::string> listOfFiles;
   std::ifstream inFile(fList.data());
-
+  std::string outputFileName = argv[2];
 
   //read the file list and spit it into a vector of strings based on how the parallelization is to be done
   //each vector is a separate subset of the fileList based on the job number
@@ -256,7 +274,7 @@ int main(int argc, const char* argv[])
     }
   }
 
-  analyze(listOfFiles);
+  analyze(listOfFiles,outputFileName);
 
   return 0; 
 }

@@ -7,7 +7,7 @@ endif
 
 MKDIR_BIN=mkdir -p $(PWD)/bin
 
-all: mkdirBin bin/MyClass.exe bin/genOnlyAnalyzer.exe bin/HBT.exe bin/Cumulants.exe
+all: mkdirBin bin/MyClass.exe bin/genOnlyAnalyzer.exe bin/HBT.exe bin/Cumulants.exe bin/Cumulants_v2.exe bin/Photons.exe bin/ToyMC_Cumulants.exe
 
 mkdirBin:
 	$(MKDIR_BIN)
@@ -16,10 +16,16 @@ bin/genOnlyAnalyzer.exe: src/genOnlyAnalyzer.C
 	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/genOnlyAnalyzer.exe src/genOnlyAnalyzer.C
 bin/HBT.exe: src/HBT.C
 	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/HBT.exe src/HBT.C
+bin/Photons.exe: src/Photons.C
+	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/Photons.exe src/Photons.C
 bin/Cumulants.exe: src/Cumulants.C
 	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/Cumulants.exe src/Cumulants.C
+bin/Cumulants_v2.exe: src/Cumulants_v2.C
+	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/Cumulants_v2.exe src/Cumulants_v2.C
 bin/MyClass.exe: src/MyClass.C
 	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/MyClass.exe src/MyClass.C
+bin/ToyMC_Cumulants.exe: src/ToyMC_Cumulants.C
+	$(CXX) $(CXXFLAGS) -Wno-error=maybe-uninitialized $(ROOT) -I $(PWD) -o bin/ToyMC_Cumulants.exe src/ToyMC_Cumulants.C
 
 clean:
 	rm -f $(PWD)/include/*~
